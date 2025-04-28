@@ -209,10 +209,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2025-04-21 16:12:54 / 修改时间：17:23:03" itemprop="dateCreated datePublished" datetime="2025-04-21T16:12:54+08:00">2025-04-21</time>
+              <time title="创建时间：2025-04-21 16:12:54" itemprop="dateCreated datePublished" datetime="2025-04-21T16:12:54+08:00">2025-04-21</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-04-28 10:48:52" itemprop="dateModified" datetime="2025-04-28T10:48:52+08:00">2025-04-28</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -234,12 +240,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="·栈溢出的原理"><a href="#·栈溢出的原理" class="headerlink" title="·栈溢出的原理"></a>·栈溢出的原理</h1><h3 id="栈以及栈的结构"><a href="#栈以及栈的结构" class="headerlink" title="栈以及栈的结构"></a>栈以及栈的结构</h3><p>栈（Stack）是程序运行时用于存储局部变量、函数调用信息（如返回地址）等数据的内存区域。栈溢出是指当程序向栈中写入数据时，超出了预先分配的栈空间，导致覆盖了栈上的其他数据。存储在栈上的东西主要包括：</p>
-<ul>
-<li><strong>返回地址（Return Address）</strong>：函数调用时，返回地址会被压入栈中，用于在函数执行完毕后返回到调用者。如果返回地址被覆盖，攻击者可以控制程序跳转到任意地址。</li>
-<li><strong>局部变量</strong>：函数中的局部变量通常存储在栈上，如果输入数据过长，可能会覆盖这些变量。</li>
-<li><strong>前一个栈帧的指针</strong>：当一个函数被调用时，栈中会分配一块内存空间（称为栈帧），用于恢复调用者的栈帧。</li>
-</ul>
+          <h1 id="·栈溢出的原理"><a href="#·栈溢出的原理" class="headerlink" title="·栈溢出的原理"></a>·栈溢出的原理</h1>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2025/04/21/%E6%A0%88%E6%BA%A2%E5%87%BA%E5%8E%9F%E7%90%86%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/#more" rel="contents">
