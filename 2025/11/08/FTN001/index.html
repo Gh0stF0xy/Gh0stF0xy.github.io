@@ -19,15 +19,15 @@
   <meta name="author" content="Gh0stF0xy">
   <meta name="keywords" content="">
   
-    <meta name="description" content="基础工具介绍· IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。 · vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp · pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍 · ROPgadget: 命令行工具">
+    <meta name="description" content="基础工具介绍· IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。  vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp  pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍  ROPgadget: 命令行工具，能轻">
 <meta property="og:type" content="article">
 <meta property="og:title" content="如何优雅地配置pwn环境(Win|Mac)">
 <meta property="og:url" content="https://www.ghostfoxy.cn/2025/11/08/FTN001/index.html">
 <meta property="og:site_name" content="GhostFoxy&#39;s 网安世界">
-<meta property="og:description" content="基础工具介绍· IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。 · vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp · pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍 · ROPgadget: 命令行工具">
+<meta property="og:description" content="基础工具介绍· IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。  vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp  pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍  ROPgadget: 命令行工具，能轻">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2025-11-08T05:04:37.000Z">
-<meta property="article:modified_time" content="2025-11-08T16:44:47.936Z">
+<meta property="article:modified_time" content="2025-11-13T08:46:22.432Z">
 <meta property="article:author" content="Gh0stF0xy">
 <meta property="article:tag" content="pwn">
 <meta property="article:tag" content="新手入门">
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          918 字
+          916 字
         
       </span>
     
@@ -292,7 +292,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-09T00:44:47+08:00
+                    本文最后更新于 2025-11-13T16:46:22+08:00
                   
                   
 
@@ -303,14 +303,24 @@
               <div class="markdown-body">
                 
                 <h3 id="基础工具介绍"><a href="#基础工具介绍" class="headerlink" title="基础工具介绍"></a>基础工具介绍</h3><p>· <strong>IDA Pro 9.0</strong>: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。</p>
-<p>· <strong>vim</strong>: 简单但是强大的文件编辑器，可用于写攻击脚本exp</p>
-<p>· <strong>pwntools</strong>: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍</p>
-<p>· <strong>ROPgadget</strong>: 命令行工具，能轻松从ELF文件中提取代码片段，对构造ROP链形成攻击脚本给予了极大方便。</p>
-<p>· <strong>onegadget</strong>: 一种能够<strong>大幅简化漏洞利用过程</strong>的强大技术</p>
-<p>· <strong>gdb</strong>：代码调试工具，有各种强大的功能，如查看栈和寄存器的情况，查找函数地址，程序调试等。</p>
-<p>· <strong>pwndbg</strong>: gdb的强大插件之一，是gdb的赛博朋克增强版，极大简化了调试流程。</p>
-<p>· <strong>Termius</strong>: 强大的SSH工具，功能类似于XShell，支持SFTP文件传输协议</p>
-<p>· <strong>UTM</strong>：稍逊色于vmware和Parallels Desktop的另一虚拟机软件，它具有模拟架构功能，是MacBook等ARM架构的设备调试x86架构的ELF文件的必需软件。</p>
+<ul>
+<li><p><strong>vim</strong>: 简单但是强大的文件编辑器，可用于写攻击脚本exp</p>
+</li>
+<li><p><strong>pwntools</strong>: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍</p>
+</li>
+<li><p><strong>ROPgadget</strong>: 命令行工具，能轻松从ELF文件中提取代码片段，对构造ROP链形成攻击脚本给予了极大方便。</p>
+</li>
+<li><p><strong>onegadget</strong>: 一种能够<strong>大幅简化漏洞利用过程</strong>的强大技术</p>
+</li>
+<li><p><strong>gdb</strong>：代码调试工具，有各种强大的功能，如查看栈和寄存器的情况，查找函数地址，程序调试等。</p>
+</li>
+<li><p><strong>pwndbg</strong>: gdb的强大插件之一，是gdb的赛博朋克增强版，极大简化了调试流程。</p>
+</li>
+<li><p><strong>Termius</strong>: 强大的SSH工具，功能类似于XShell，支持SFTP文件传输协议</p>
+</li>
+<li><p><strong>UTM</strong>：稍逊色于vmware和Parallels Desktop的另一虚拟机软件，它具有模拟架构功能，是MacBook等ARM架构的设备调试x86架构的ELF文件的必需软件。</p>
+</li>
+</ul>
 <h3 id="软件安装"><a href="#软件安装" class="headerlink" title="软件安装"></a>软件安装</h3><p><strong>IDA Pro 9.0</strong>:</p>
 <p>使用Windows的师傅直接点击<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1eCmxbP6nNHm5qz41rFbetg?pwd=5hdq" title="这里">这里</a>下载</p>
 <p>使用Mac的师傅点击<a target="_blank" rel="noopener" href="https://macked.app/ida-professional-9-2-250908-for-mac-crack.html" title="这里">这里</a>后登录账号下载，没有就注册一个</p>
@@ -444,7 +454,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>更新于</div>
-          <div>2025年11月9日</div>
+          <div>2025年11月13日</div>
         </div>
       
       
