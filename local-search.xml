@@ -17,8 +17,6 @@
       
       <category>NSSCTF</category>
       
-      <category>SWPU</category>
-      
     </categories>
     
     
@@ -42,7 +40,9 @@
     
     <categories>
       
-      <category>刷题题解，BUUCTF</category>
+      <category>刷题题解</category>
+      
+      <category>BUUCTF</category>
       
     </categories>
     
